@@ -4,7 +4,7 @@ push = require "libraries/push"
 sti = require "libraries/sti"
 camera = require "libraries/camera"
 wf = require "libraries/windfield"
-
+button = require "button" 
 
 function love.load()
     cam = camera(nil, nil, 3.5) -- Initialize the camera with a scale
@@ -17,6 +17,29 @@ function love.load()
 
     gameMap = sti("maps/TestMap.lua") -- Load the map using STI
 
+    game = {
+        state = { -- Properly define the game state table
+            menu = true,
+            paused = false,
+            running = false,
+            ended = false 
+        }
+    }
+
+    buttons = {
+        menu_state = {}
+    } 
+
+    function startGame()
+        game.state["menu"] = false
+        game.state["running"] = true
+    end
+
+
+    buttons.menu_state.playGame = button("Play Game", startGame, nil, 120, 50)
+    buttons.menu_state.settings = button("Settings", nil, nil, 120, 50)
+    buttons.menu_state.exitGame = button("Exit Game", love.event.quit, nil, 120, 50)
+    
     player = {}
     player.collider = world:newBSGRectangleCollider(200, 100, 16, 19, 14) 
     player.collider:setFixedRotation(true) -- Set the collider to not rotate
@@ -42,11 +65,26 @@ function love.load()
             table.insert(Walls, wall)
         end
     end
+
+    sounds = {}
+    sounds.soundtrack = love.audio.newSource("assets/songs/soundtrack.wav", "stream") 
 end
 
 function love.keypressed(key)
     if key == 'escape' then
         love.event.quit() -- Exit the game
+    end
+end
+
+function love.mousepressed(x, y, button, istouch, presses)
+    if not game.state["running"] then
+        if button == 1 then
+            if game.state["menu"] then
+                for index in pairs(buttons.menu_state) do
+                    buttons.menu_state[index]:CheckPressed(x, y)
+                end
+            end
+        end
     end
 end
 
@@ -121,11 +159,39 @@ function love.update(dt)
 end
 
 function love.draw()
-    cam:attach()
-        gameMap:drawLayer(gameMap.layers["water"])
-        gameMap:drawLayer(gameMap.layers["grass"])
-        player.anim:draw(player.spriteSheet, player.x, player.y, nil, nil, nil, 8, 9.5)
-        --world:draw()
-    cam:detach() 
-    love.graphics.print("FPS: " .. love.timer.getFPS(), 10, 10) -- Display the FPS in the top-left corner
+    if game.state["running"] then
+        sounds.soundtrack:stop() 
+        cam:attach()
+            gameMap:drawLayer(gameMap.layers["water"])
+            gameMap:drawLayer(gameMap.layers["grass"])
+            player.anim:draw(player.spriteSheet, player.x, player.y, nil, nil, nil, 8, 9.5)
+        cam:detach() 
+        love.graphics.print("FPS: " .. love.timer.getFPS(), 10, 10) 
+
+    elseif game.state["menu"] then
+        love.graphics.clear(0.1, 0.5, 0.2) 
+        love.graphics.setFont(love.graphics.newFont(24)) 
+        love.graphics.print("Sheeps Happens...", love.graphics.getWidth() / 2 - love.graphics.getFont():getWidth("Sheep Happens...") / 2, love.graphics.getHeight() / 2 - 100)
+        love.graphics.setFont(love.graphics.newFont(18)) 
+        buttons.menu_state.playGame:draw( 
+            love.graphics.getWidth() / 2 - buttons.menu_state.playGame.width / 2, -- Center horizontally
+            love.graphics.getHeight() / 2 - buttons.menu_state.playGame.height / 2 -- Center vertically
+        )
+        buttons.menu_state.settings:draw(
+            love.graphics.getWidth() / 2 - buttons.menu_state.settings.width / 2, 
+            love.graphics.getHeight() / 2 - buttons.menu_state.settings.height / 2 + 60 
+        )
+        buttons.menu_state.exitGame:draw( 
+            love.graphics.getWidth() / 2 - buttons.menu_state.exitGame.width / 2, 
+            love.graphics.getHeight() / 2 - buttons.menu_state.exitGame.height / 2 + 120 
+        )
+        sounds.soundtrack:play()
+        sounds.soundtrack:setLooping(true) 
+        sounds.soundtrack:setVolume(0.2) 
+    end
+
+    if not game.state["running"] and not game.state["menu"] then
+       love.graphics.clear(0.5, 0.5, 0.5) 
+        return
+    end
 end
