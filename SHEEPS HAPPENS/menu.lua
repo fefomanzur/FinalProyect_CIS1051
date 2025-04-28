@@ -19,7 +19,7 @@ function loadMenu()
     backgroundMusic = love.audio.newSource("assets/Songs/soundtrack.wav", "stream")
     backgroundMusic:setLooping(true)
     backgroundMusic:play()
-    backgroundMusic:setVolume(0.5)
+    backgroundMusic:setVolume(1)
 end
 
 function handleMenuMousePressed(x, y, button)

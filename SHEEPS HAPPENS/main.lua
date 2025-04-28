@@ -12,14 +12,17 @@ require "menu"   -- Import the menu logic
 require "game"   -- Import the game state logic
 
 function love.load()
-    love.window.setMode(1280, 720, {resizable = true})
+    love.window.setMode(1280, 720)
     love.graphics.setDefaultFilter("nearest", "nearest")
     love.window.setTitle("Sheeps Happens")
 
-    cam = camera(nil, nil, 3.5) 
+    cam = camera(nil, nil, 5) 
     world = wf.newWorld(0, 0, true) -- Ensure the physics world is initialized with default gravity
+    world:addCollisionClass("Sheep") 
+    world:addCollisionClass("Player") 
+    world:addCollisionClass("Walls")
 
-    initializeGame() -- Initialize game state and objects
+    initializeGame() 
 end
 
 function love.keypressed(key)
@@ -46,5 +49,5 @@ function love.update(dt)
 end
 
 function love.draw()
-    drawGame() 
+    drawGame()
 end
